@@ -1,47 +1,13 @@
+# Use the latest 2.1 version of CircleCI pipeline process engine. See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
-
-jobs:
-  tests:
-    docker:
-      - image: 'cimg/python:3.6'
-        environment:
-          TOX_POSARGS: ''
-      - image: 'docker.elastic.co/elasticsearch/elasticsearch:7.9.2'
-        name: search
-        environment:
-          discovery.type: single-node
-    steps:
-      - checkout
-      - run: git submodule sync
-      - run: git submodule update --init
-      - run: pip install --user tox
-      - run: tox -e py36,codecov
-
-  checks:
-    docker:
-      - image: 'cimg/python:3.6'
-        environment:
-          NODE_VERSION: 10.17.0
-    steps:
-      - checkout
-      - run: git submodule sync
-      - run: git submodule update --init
-      - run: pip install --user tox
-      - run: scripts/circle/install_node.sh
-      - run:
-          name: Add node to the path
-          command: |
-            echo 'export PATH=~/.nvm/versions/node/v${NODE_VERSION}/bin:$PATH' >> $BASH_ENV
-            source $BASH_ENV
-      - run: tox -e migrations
-      - run: tox -e lint
-      - run: tox -e docs-lint
-      - run: tox -e docs
-      - run: tox -e eslint
-
+# Use a package of configuration called an orb.
+orbs:
+  # Declare a dependency on the welcome-orb
+  welcome: circleci/welcome-orb@0.4.1
+# Orchestrate or schedule a set of jobs
 workflows:
-  version: 2
-  test:
+  # Name the workflow "welcome"
+  welcome:
+    # Run the welcome/run job in its own container
     jobs:
-      - checks
-      - tests
+      - welcome/run
